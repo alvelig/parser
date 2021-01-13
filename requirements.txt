@@ -1,5 +1,5 @@
-Flask==1.1.2
-Flask-Cors==3.0.10
-gunicorn==20.0.4
-pandas @ file:///opt/concourse/worker/volumes/live/f14cf8c4-c564-4eff-4b17-158e90dbf88a/volume/pandas_1602088128240/work
+Flask
+Flask-Cors
+gunicorn
+pandas
 snscrape @ git+https://github.com/JustAnotherArchivist/snscrape.git@588ec415ffc169a46752e225fcc90eacea4e65cd
