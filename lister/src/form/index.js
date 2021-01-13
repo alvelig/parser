@@ -3,14 +3,21 @@ import React from 'react';
 import {Form as FinalForm, Field} from 'react-final-form';
 import {isValidHttpUrl} from '../validators';
 
-const FormComponent = ({handleSubmit, submitting, error}) => {
+const FormComponent = ({handleSubmit, submitting, submitError}) => {
   return (
     <form
+      style={{
+        maxWidth: 500,
+        width: '100%'
+      }}
       className="link-form"
       onSubmit={(e) => {
         e.preventDefault();
       }}>
-      {submitting ? 'Please, wait...' : 'Paste your link here' }
+      <div>{submitting ? 'Please, wait...' : submitError === 'Still processing...' ? `
+        The file is queued for processing.
+        The app will retry to check its status every 10 seconds.
+        Please wait...` : 'Paste your link here' }</div>
       <Field
         name="url"
         type="text"
@@ -19,7 +26,12 @@ const FormComponent = ({handleSubmit, submitting, error}) => {
         {({ meta, input }) => {
           return (
             <>
-              <input {...input} onChange={(e) => {
+              <input
+                {...input}
+                style={{
+                  width: '100%'
+                }}
+                onChange={(e) => {
                 input.onChange(e.target.value);
                 !submitting && handleSubmit();
               }} />
@@ -30,9 +42,7 @@ const FormComponent = ({handleSubmit, submitting, error}) => {
           );
         }}
       </Field>
-      <div style={{ color: 'red' }}>
-        {error}
-      </div>
+      {submitError && <div style={{ color: 'red' }}>{submitError}</div>}
       <button
         disabled={submitting}
         onClick={handleSubmit}>
@@ -42,12 +52,14 @@ const FormComponent = ({handleSubmit, submitting, error}) => {
   );
 };
 
+let timeout;
+
 const Form = ({ onResult }) => {
   return (
     <div>
       <FinalForm
         component={FormComponent}
-        onSubmit={async (form) => {
+        onSubmit={async (form, formApi) => {
           const pathname = new URL(form?.url).pathname || "";
 
           const id = pathname.split('/status/')[1];
@@ -64,7 +76,19 @@ const Form = ({ onResult }) => {
             }
           });
           const data = await response.json();
-          onResult(data);
+          if(data.error) {
+            if(data.error === 1000) {
+              clearTimeout(timeout);
+              timeout = setTimeout(() => {
+                formApi.submit();
+              }, 10000);
+            }
+            return {
+              [FORM_ERROR]: data.message
+            }
+          } else {
+            onResult(data);
+          }
         }} />
     </div>
   )

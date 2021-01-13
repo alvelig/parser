@@ -18,6 +18,10 @@ input {
   box-sizing: border-box;
 }
 
+button:disabled {
+  opacity: 0.5;
+}
+
 .App-logo {
   height: 40vmin;
   pointer-events: none;

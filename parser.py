@@ -51,7 +51,6 @@ class Feature:
         self.name = chunk.text
         # self.names = set()
         self.chunks = []
-        self.count = 0
         self.add(chunk)
 
     def add(self, chunk):
@@ -90,9 +89,9 @@ class Feature:
     def __repr__(self):
         return self.instance()
 
-features = []  
 
-def parse(df):
+def parse(df, cache, id):
+    features = []
     chunks = []
     for index, row in df.iterrows():
         # if index > 10:
@@ -124,8 +123,8 @@ def parse(df):
         textchunks = flatsplit(textchunks, '!')
         textchunks = flatsplit(textchunks, '?')
         textchunks = flatsplit(textchunks, ': ')
-        textchunks = flatsplit(textchunks, 'and')
-        textchunks = flatsplit(textchunks, 'with')
+        textchunks = flatsplit(textchunks, ' and ')
+        textchunks = flatsplit(textchunks, ' with ')
         textchunks = flatsplit(textchunks, ',')
         # textchunks = flatsplit(textchunks, '+')
         # textchunks = flatsplit(textchunks, '/')
@@ -135,8 +134,17 @@ def parse(df):
         for chunk in textchunks:
             if chunk:
                 chunks.append(Chunk(text = chunk, id = row['Tweet Id'], by = row['Username']))
+        
+    total_chunks = len(chunks)
+    print("%d chunks formed" % total_chunks)
 
+    ii = 0
     for chunk in chunks:
+        ii += 1
+        if ii % 1000 == 0:
+            cache[id] = "Tweet thread %s: %d of %d chunks processed." % (id, ii, total_chunks)
+            print(cache[id])
+
         matched = False
         for feature in features:
             if feature.compare(chunk):
@@ -145,5 +153,6 @@ def parse(df):
             features.append(Feature(chunk))
     
     # TODO: here we could compare popular features if they are contained in other features
+    print("%d features formed" % len(features))
 
     return features
